@@ -1,0 +1,31 @@
+{
+    "telegram_only": {
+        "title": "Приложение доступно только в Telegram",
+        "message": "Пожалуйста, откройте это приложение через Telegram Mini Apps для продолжения работы.",
+        "showTelegramButton": true,
+        "showRetryButton": false
+    },
+    "telegram_data_missing": {
+        "title": "Ошибка данных Telegram",
+        "message": "Не удалось получить данные от Telegram. Пожалуйста, попробуйте снова или перезапустите приложение.",
+        "showTelegramButton": false,
+        "showRetryButton": true
+    },
+    "auth_failed": {
+        "title": "Ошибка авторизации",
+        "message": "Не удалось выполнить вход. Пожалуйста, попробуйте снова.",
+        "showTelegramButton": false,
+        "showRetryButton": true
+    },
+    "default": {
+        "title": "Произошла ошибка",
+        "message": "Неизвестная ошибка. Пожалуйста, попробуйте позже.",
+        "showTelegramButton": false,
+        "showRetryButton": true
+    },
+    "telegram_init_failed": {
+        "title": "Ошибка инициализации",
+        "message": "Не удалось загрузить приложение. Пожалуйста, попробуйте открыть его снова через Telegram.",
+        "showTelegramButton": true
+    }
+}

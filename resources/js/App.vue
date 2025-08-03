@@ -1,54 +1,115 @@
 <template>
-    <div class="min-h-screen bg-gray-100 flex flex-col">
-        <main class="flex-grow p-4 pb-16">
-            <router-view />
-        </main>
-        <nav class="bg-white border-t border-gray-200 fixed bottom-0 w-full">
-            <div class="flex justify-around py-2">
-                <router-link
-                    to="/"
-                    class="flex flex-col items-center text-gray-600 hover:text-blue-500"
-                    active-class="text-blue-500"
-                >
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
-                    </svg>
-                    <span class="text-xs mt-1">Главная</span>
-                </router-link>
-                <router-link
-                    to="/events"
-                    class="flex flex-col items-center text-gray-600 hover:text-blue-500"
-                    active-class="text-blue-500"
-                >
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                    </svg>
-                    <span class="text-xs mt-1">События</span>
-                </router-link>
-                <router-link
-                    to="/settings"
-                    class="flex flex-col items-center text-gray-600 hover:text-blue-500"
-                    active-class="text-blue-500"
-                >
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                    </svg>
-                    <span class="text-xs mt-1">Настройки</span>
-                </router-link>
+    <div class="h-screen flex flex-col" :class="themeClasses">
+        <template v-if="!isReady">
+            <div class="fixed inset-0 flex items-center justify-center">
+                <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
             </div>
-        </nav>
+        </template>
+
+        <template v-else>
+            <main class="flex-1 overflow-hidden flex flex-col">
+                <router-view :user="user" :theme="theme" />
+            </main>
+
+            <nav
+                v-if="showBottomNav"
+                class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 fixed bottom-0 w-full"
+            >
+                <div class="flex justify-around py-2">
+                    <router-link
+                        v-for="route in navigationRoutes"
+                        :key="route.path"
+                        :to="route.path"
+                        class="flex flex-col items-center text-gray-600 dark:text-gray-300 hover:text-blue-500 dark:hover:text-blue-400 px-2 py-1"
+                        active-class="text-blue-500 dark:text-blue-400"
+                    >
+                        <component :is="route.meta.icon" class="w-6 h-6" />
+                        <span class="text-xs mt-1">{{ route.meta.navTitle }}</span>
+                    </router-link>
+                </div>
+            </nav>
+        </template>
     </div>
 </template>
 
 <script>
+import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import api from './api/app.js'
+import {
+    HomeIcon,
+    CalendarIcon,
+    CogIcon
+} from '@heroicons/vue/outline'
+
 export default {
-    name: 'App',
-    mounted() {
-        if (window.Telegram?.WebApp) {
-            console.log('Telegram WebApp initialized')
-        } else {
-            console.warn('Telegram WebApp not detected - running in browser mode')
+    components: {
+        HomeIcon,
+        CalendarIcon,
+        CogIcon
+    },
+    setup() {
+        const router = useRouter()
+        const user = ref(null)
+        const isReady = ref(false)
+        const theme = ref('light')
+
+        const navigationRoutes = computed(() => {
+            return router.options.routes.filter(route => route.meta.showInNav)
+        })
+
+        const showBottomNav = computed(() => {
+            return router.currentRoute.value.meta.showInNav
+        })
+
+        const themeClasses = computed(() => ({
+            'bg-gray-100': theme.value === 'light',
+            'bg-gray-900': theme.value === 'dark',
+            'text-gray-800': theme.value === 'light',
+            'text-gray-100': theme.value === 'dark'
+        }))
+
+        const initTelegramApp = () => {
+            if (window.Telegram?.WebApp) {
+                const tg = window.Telegram.WebApp
+                tg.expand()
+                theme.value = tg.colorScheme || 'light'
+                tg.onEvent('themeChanged', () => {
+                    theme.value = tg.colorScheme || 'light'
+                })
+            }
+        }
+
+        const loadUser = async () => {
+            try {
+                const token = localStorage.getItem('auth_token')
+                if (token) {
+                    user.value = await api.getCurrentUser()
+                }
+            } catch (error) {
+                console.error('User load error:', error)
+                // Ошибки теперь обрабатываются через TelegramError.vue
+            } finally {
+                isReady.value = true
+            }
+        }
+
+        onMounted(async () => {
+            initTelegramApp()
+            if (router.currentRoute.value.name !== 'telegram-error') {
+                await loadUser()
+            } else {
+                isReady.value = true
+            }
+        })
+
+        return {
+            user,
+            isReady,
+            theme,
+            navigationRoutes,
+            showBottomNav,
+            themeClasses
         }
     }
 }
